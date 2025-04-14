@@ -16,5 +16,3 @@ export const mastra: Mastra = new Mastra({
     level: "info",
   }),
 });
-
-export default mastra;

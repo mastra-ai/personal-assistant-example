@@ -3,7 +3,7 @@ import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { MCPConfiguration } from "@mastra/mcp";
 import path from "path";
-import { blogPostsTool } from "../tools";
+import { mastra } from "../index";
 
 
 const mcp = new MCPConfiguration({
@@ -185,5 +185,5 @@ export const blogPostGeneratorAgent = new Agent({
 
   `,
   model: openai("gpt-4o"),
-  tools: { ...mcpTools, ...blogPostsTool },
+  tools: { ...mcpTools,},
 });
