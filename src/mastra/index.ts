@@ -1,8 +1,9 @@
 import { Mastra } from "@mastra/core/mastra";
-import { createLogger } from "@mastra/core/logger";
+import { ConsoleLogger } from "@mastra/core/logger";
 import { TelegramIntegration } from "./integrations/telegram";
-import { personalAssistantAgent } from "./agents";
+import { personalAssistantAgent } from "./agents/personalAssistantAgent";
 import { dailyWorkflow } from "./workflows";
+import { LibSQLStore } from "@mastra/libsql";
 
 export const mastra: Mastra = new Mastra({
   agents: {
@@ -11,9 +12,9 @@ export const mastra: Mastra = new Mastra({
   workflows: {
     dailyWorkflow,
   },
-  logger: createLogger({
-    name: "Mastra",
-    level: "info",
+  logger: new ConsoleLogger(),
+  storage: new LibSQLStore({
+    url: "file:./mastra.db",
   }),
 });
 

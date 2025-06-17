@@ -1,5 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
-import { personalAssistantAgent } from "../agents";
+import { personalAssistantAgent } from "../agents/personalAssistantAgent";
 
 export class TelegramIntegration {
   private bot: TelegramBot;

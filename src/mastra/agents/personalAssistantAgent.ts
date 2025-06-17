@@ -1,17 +1,24 @@
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
-import { Memory } from "@mastra/memory";
-import { MCPConfiguration } from "@mastra/mcp";
-import path from "path";
 import { weatherTool } from "../tools";
+import { Memory } from "@mastra/memory";
+import { MCPClient } from "@mastra/mcp";
+import path from "path";
+import { LibSQLStore } from "@mastra/libsql";
+import { dailyWorkflow } from "../workflows";
 
-const mcp = new MCPConfiguration({
+const mcp = new MCPClient({
   servers: {
     zapier: {
       url: new URL(process.env.ZAPIER_MCP_URL || ""),
     },
     github: {
-      url: new URL(process.env.COMPOSIO_MCP_GITHUB || ""),
+      url: new URL("https://api.githubcopilot.com/mcp"),
+      requestInit: {
+        headers: {
+          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+        },
+      },
     },
     hackernews: {
       command: "npx",
@@ -30,28 +37,30 @@ const mcp = new MCPConfiguration({
 const mcpTools = await mcp.getTools();
 
 const memory = new Memory({
+  storage: new LibSQLStore({
+    url: "file:../mastra.db", // Or your database URL
+  }),
   options: {
     // Keep last 20 messages in context
     lastMessages: 20,
     // Enable semantic search to find relevant past conversations
-    semanticRecall: {
-      topK: 3,
-      messageRange: {
-        before: 2,
-        after: 1,
-      },
-    },
+    // semanticRecall: {
+    //   topK: 3,
+    //   messageRange: {
+    //     before: 2,
+    //     after: 1,
+    //   },
+    // },
     // Enable working memory to remember user information
     workingMemory: {
       enabled: true,
       template: `<user>
-         <first_name></first_name>
-         <username></username>
-         <preferences></preferences>
-         <interests></interests>
-         <conversation_style></conversation_style>
-       </user>`,
-      use: "tool-call",
+          <first_name></first_name>
+          <username></username>
+          <preferences></preferences>
+          <interests></interests>
+          <conversation_style></conversation_style>
+        </user>`,
     },
   },
 });
@@ -94,27 +103,14 @@ export const personalAssistantAgent = new Agent({
 
       7. Filesystem:
          - You also have filesystem read/write access to a notes directory. 
-         - You can use that to store info for later use or organize info for the user.
+         - You can use that to store information such as reminders for later use or organize info for the user.
          - You can use this notes directory to keep track of to do list items for the user.
          - Notes dir: ${path.join(process.cwd(), `notes`)}
-
-      
-      Keep your responses concise and friendly.
-
-      You have access to conversation memory and can remember details about users.
-      When you learn something about a user, update their working memory using the appropriate tool.
-      This includes:
-      - Their interests
-      - Their preferences
-      - Their conversation style (formal, casual, etc.)
-      - Any other relevant information that would help personalize the conversation
-
-      Always maintain a helpful and professional tone.
-      Use the stored information to provide more personalized responses.
-
-   
   `,
   model: openai("gpt-4o"),
   tools: { ...mcpTools, weatherTool },
+  workflows: {
+    dailyWorkflow,
+  },
   memory,
 });

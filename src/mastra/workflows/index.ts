@@ -1,14 +1,15 @@
-import { Step, Workflow } from "@mastra/core/workflows";
+import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
-import { mastra } from "../";
 
 // Define the steps separately
-const getHackerNewsArticles = new Step({
+const getHackerNewsArticles = createStep({
   id: "getHackerNewsArticles",
+  description: "Gets the top 20 stories from Hacker News",
+  inputSchema: z.object({}),
   outputSchema: z.object({
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async ({ mastra }) => {
     const agent = mastra.getAgent("personalAssistantAgent");
     const hnPrompt = `
       Fetch the top 20 stories from Hacker News.
@@ -31,12 +32,14 @@ const getHackerNewsArticles = new Step({
   },
 });
 
-const summarizeMastraPRs = new Step({
+const summarizeMastraPRs = createStep({
   id: "summarizeMastraPRs",
+  description: "Summarizes the last 10 PRs from the @mastra-ai/mastra repo",
+  inputSchema: z.object({ message: z.string() }),
   outputSchema: z.object({
     message: z.string(),
   }),
-  execute: async ({ context }) => {
+  execute: async ({ mastra }) => {
     const agent = mastra.getAgent("personalAssistantAgent");
     const githubPrompt = `
       Fetch the last 10 PRs from the @mastra-ai/mastra repo sorting by date descending.
@@ -53,15 +56,19 @@ const summarizeMastraPRs = new Step({
   },
 });
 
-const combineMessages = new Step({
+const combineMessages = createStep({
   id: "combineMessages",
+  description: "Combines the messages from the hacker news and mastra PRs",
+  inputSchema: z.object({ message: z.string() }),
   outputSchema: z.object({
     message: z.string(),
   }),
-  execute: async ({ context }) => {
-    const hackerNews = context.getStepResult("getHackerNewsArticles");
-    const mastraPRs = context.getStepResult("summarizeMastraPRs");
-    console.log("result combine", { hackerNews, mastraPRs });
+  execute: async ({ getStepResult }) => {
+    const hackerNews = getStepResult(getHackerNewsArticles);
+    console.log("hackerNews", hackerNews);
+    const mastraPRs = getStepResult(summarizeMastraPRs);
+    console.log("mastraPRs", mastraPRs);
+    //console.log("result combine", { hackerNews?.message, mastraPRs?.message });
     return {
       message: `${hackerNews.message}\n\n${mastraPRs.message}`,
     };
@@ -69,13 +76,16 @@ const combineMessages = new Step({
 });
 
 // Create the workflow
-export const dailyWorkflow = new Workflow({
-  name: "daily-workflow",
+export const dailyWorkflow = createWorkflow({
+  id: "daily-workflow",
+  description: "Daily workflow",
+  inputSchema: z.object({}),
+  outputSchema: z.object({}),
 });
 
 // Add steps to the workflow
 dailyWorkflow
-  .step(getHackerNewsArticles)
+  .then(getHackerNewsArticles)
   .then(summarizeMastraPRs)
   .then(combineMessages)
   .commit();
