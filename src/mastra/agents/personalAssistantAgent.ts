@@ -43,15 +43,6 @@ const memory = new Memory({
   options: {
     // Keep last 20 messages in context
     lastMessages: 20,
-    // Enable semantic search to find relevant past conversations
-    // semanticRecall: {
-    //   topK: 3,
-    //   messageRange: {
-    //     before: 2,
-    //     after: 1,
-    //   },
-    // },
-    // Enable working memory to remember user information
     workingMemory: {
       enabled: true,
       template: `<user>

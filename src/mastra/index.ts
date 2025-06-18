@@ -4,15 +4,19 @@ import { TelegramIntegration } from "./integrations/telegram";
 import { personalAssistantAgent } from "./agents/personalAssistantAgent";
 import { dailyWorkflow } from "./workflows";
 import { LibSQLStore } from "@mastra/libsql";
+import { weatherAgent } from "./agents/weatherAgent";
 
 export const mastra: Mastra = new Mastra({
   agents: {
     personalAssistantAgent,
+    weatherAgent,
   },
   workflows: {
     dailyWorkflow,
   },
-  logger: new ConsoleLogger(),
+  logger: new ConsoleLogger({
+    level: "info",
+  }),
   storage: new LibSQLStore({
     url: "file:./mastra.db",
   }),
