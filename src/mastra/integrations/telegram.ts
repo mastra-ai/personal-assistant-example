@@ -98,7 +98,7 @@ export class TelegramIntegration {
 
       // Stream response using the agent
       const stream = await personalAssistantAgent.stream(text, {
-        threadId: `telegram-${chatId}`, // Use chat ID as thread ID
+        threadId: `telegram-${chatId}-${userId}`, // Combine chat ID & user ID for group-safe thread IDs
         resourceId: userId, // Use user ID as resource ID
         context: [
           {
